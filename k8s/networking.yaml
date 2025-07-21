@@ -6,8 +6,8 @@ metadata:
   namespace: default
 spec:
   domains:
-    - kerl.space
-    - www.kernl.space # Optional: add www subdomain
+    - kernul.dev
+    - www.kernul.dev
 ---
 apiVersion: networking.gke.io/v1beta1
 kind: FrontendConfig

@@ -42,8 +42,10 @@ docker-compose*
 # Kubernetes files
 k8s
 kubernetes
-*.yaml
-*.yml
+# Note: Don't exclude pnpm-lock.yaml
+k8s/*.yaml
+k8s/*.yml
+docker-compose*.yml
 
 # IDE
 .vscode

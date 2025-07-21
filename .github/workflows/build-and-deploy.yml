@@ -55,14 +55,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # Build args if needed
-          # build-args: |
-          #   NODE_ENV=production
           # Secrets for private npm packages if needed
           # secrets: |
           #   "npmrc=${{ secrets.NPM_TOKEN }}"
@@ -108,14 +106,23 @@ jobs:
       
       - name: Create/Update Kubernetes Secrets
         run: |
-          # Delete existing secret if it exists
+          # Delete existing secrets if they exist
           kubectl delete secret microfastify-secrets --namespace=default --ignore-not-found=true
+          kubectl delete secret ghcr-secret --namespace=default --ignore-not-found=true
           
-          # Create new secret from GitHub Secrets
+          # Create application secrets from GitHub Secrets
           kubectl create secret generic microfastify-secrets \
             --namespace=default \
             --from-literal=database-url="${{ secrets.DATABASE_URL }}" \
-            --from-literal=auth-keys="${{ secrets.AUTH_KEYS }}"
+            --from-literal=api-key="${{ secrets.API_KEY }}"
+          
+          # Create Docker registry secret for GHCR
+          kubectl create secret docker-registry ghcr-secret \
+            --namespace=default \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --docker-email=${{ github.actor }}@users.noreply.github.com
       
       - name: Apply Kubernetes manifests
         run: |
