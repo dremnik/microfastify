@@ -13,10 +13,11 @@ import {
 import { ZodError } from "zod";
 
 import { logger } from "./logger";
-import { AUTH_KEYS } from "@/lib/constants";
+import { AUTH_KEYS, RATE_LIMIT_RPM } from "@/lib/constants";
 import { APIError, InternalServerError, ValidationError } from "./error";
 
 import users from "./routes/users";
+import rateLimit from "@fastify/rate-limit";
 
 /**
  * Main app builder.
@@ -39,6 +40,8 @@ export async function build(
   //   keys: AUTH_KEYS,
   //   verifyErrorLogLevel: "debug",
   // });
+
+  app.register(rateLimit, { max: RATE_LIMIT_RPM, timeWindow: "1 minute" });
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
