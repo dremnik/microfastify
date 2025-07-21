@@ -51,14 +51,15 @@ spec:
                 secretKeyRef:
                   name: microfastify-secrets
                   key: api-key
-          # Resource limits - testing deployment with smaller resources
+          # Resource limits - minimal for e2-small nodes (2 vCPU each)
+          # NOTE: Fastify production recommendation is 2 vCPU per app node
           resources:
             requests:
               memory: "128Mi"
-              cpu: "500m"       # 0.5 vCPU for testing
+              cpu: "100m"       # 0.1 vCPU request for e2-small compatibility
             limits:
               memory: "256Mi"
-              cpu: "500m"       # 0.5 vCPU max
+              cpu: "200m"       # 0.2 vCPU max
           # Health checks disabled for nginx testing
           # Security context for the container
           securityContext:

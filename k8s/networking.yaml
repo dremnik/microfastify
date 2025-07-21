@@ -6,8 +6,7 @@ metadata:
   namespace: default
 spec:
   domains:
-    - kernul.dev
-    - www.kernul.dev
+    - api.microprojects.app
 ---
 apiVersion: networking.gke.io/v1beta1
 kind: FrontendConfig
