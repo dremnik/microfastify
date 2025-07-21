@@ -1,17 +1,13 @@
-import fastify from "fastify";
+import { build } from "./app";
 
-import { logger } from "./logger";
+const app = await build();
 
-const server = fastify({ logger });
+const port = parseInt(process.env.PORT || "8080", 10);
+const host = process.env.HOST || "0.0.0.0";
 
-server.get("/ping", async (request, reply) => {
-  return "pong\n";
-});
-
-server.listen({ port: 8080 }, (err, address) => {
-  if (err) {
-    server.log.error(err);
-    process.exit(1);
-  }
-  server.log.info(`Server listening at ${address}`);
-});
+try {
+  await app.listen({ port, host });
+} catch (err) {
+  app.log.error(err);
+  process.exit(1);
+}
