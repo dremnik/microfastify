@@ -1,6 +1,8 @@
 import fastify from "fastify";
 
-const server = fastify();
+import { logger } from "./logger";
+
+const server = fastify({ logger });
 
 server.get("/ping", async (request, reply) => {
   return "pong\n";
@@ -8,8 +10,8 @@ server.get("/ping", async (request, reply) => {
 
 server.listen({ port: 8080 }, (err, address) => {
   if (err) {
-    console.error(err);
+    server.log.error(err);
     process.exit(1);
   }
-  console.log(`Server listening at ${address}`);
+  server.log.info(`Server listening at ${address}`);
 });
