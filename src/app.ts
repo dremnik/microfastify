@@ -4,6 +4,8 @@ import fastify, {
   FastifyRequest,
   FastifyServerOptions,
 } from "fastify";
+import auth from "@fastify/auth";
+import bearerAuthPlugin from "@fastify/bearer-auth";
 import {
   serializerCompiler,
   validatorCompiler,
@@ -11,6 +13,7 @@ import {
 import { ZodError } from "zod";
 
 import { logger } from "./logger";
+import { AUTH_KEYS } from "@/lib/constants";
 import { APIError, InternalServerError, ValidationError } from "./error";
 
 import users from "./routes/users";
@@ -27,6 +30,15 @@ export async function build(
     logger,
     ...opts,
   });
+
+  // Auth
+  app.register(auth);
+  // Bearer auth - API key
+  // app.register(bearerAuthPlugin, {
+  //   addHook: false,
+  //   keys: AUTH_KEYS,
+  //   verifyErrorLogLevel: "debug",
+  // });
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);

@@ -1,6 +1,6 @@
 import { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
 
-import { Router } from "@/router";
+import { Router } from "@/routes/router";
 import { NotFoundError } from "@/error";
 import {
   userSchemas,
