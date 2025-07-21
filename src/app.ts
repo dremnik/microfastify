@@ -40,14 +40,14 @@ export async function build(
   // Auth
   app.register(auth);
   // Bearer auth - API key
-  // app.register(bearerAuthPlugin, {
-  //   addHook: false,
-  //   keys: AUTH_KEYS,
-  //   verifyErrorLogLevel: "debug",
-  // });
+  app.register(bearerAuthPlugin, {
+    addHook: false,
+    keys: AUTH_KEYS,
+    verifyErrorLogLevel: "debug",
+  });
 
   app.register(helmet);
-  // app.register(rateLimit, { max: RATE_LIMIT_RPM, timeWindow: "1 minute" });
+  app.register(rateLimit, { max: RATE_LIMIT_RPM, timeWindow: "1 minute" });
 
   // Schema validation
   app.setValidatorCompiler(validatorCompiler);

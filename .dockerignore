@@ -1,0 +1,63 @@
+# Version control
+.git
+.gitignore
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Development dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Development files
+.env
+.env.*
+!.env.example
+*.md
+LICENSE
+
+# Test files
+coverage
+.nyc_output
+test
+tests
+__tests__
+*.test.js
+*.spec.js
+
+# Build files
+dist
+*.tsbuildinfo
+
+# Docker files
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Kubernetes files
+k8s
+kubernetes
+*.yaml
+*.yml
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Other
+.eslintrc*
+.prettierrc*
+.editorconfig
+CLAUDE.md

@@ -1,0 +1,142 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+      
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Build args if needed
+          # build-args: |
+          #   NODE_ENV=production
+          # Secrets for private npm packages if needed
+          # secrets: |
+          #   "npmrc=${{ secrets.NPM_TOKEN }}"
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+    permissions:
+      contents: read
+      id-token: write  # For OIDC authentication to GKE
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Option 1: If using GKE with Workload Identity
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Configure kubectl
+        run: |
+          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} \
+            --region ${{ secrets.GKE_REGION }} \
+            --project ${{ secrets.GCP_PROJECT_ID }}
+      
+      # Option 2: If using generic Kubernetes cluster with kubeconfig
+      # - name: Set up kubectl
+      #   uses: azure/setup-kubectl@v3
+      #   with:
+      #     version: 'latest'
+      
+      # - name: Configure kubectl
+      #   run: |
+      #     echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > /tmp/kubeconfig
+      #     echo "KUBECONFIG=/tmp/kubeconfig" >> $GITHUB_ENV
+      
+      - name: Create/Update Kubernetes Secrets
+        run: |
+          # Delete existing secret if it exists
+          kubectl delete secret microfastify-secrets --namespace=default --ignore-not-found=true
+          
+          # Create new secret from GitHub Secrets
+          kubectl create secret generic microfastify-secrets \
+            --namespace=default \
+            --from-literal=database-url="${{ secrets.DATABASE_URL }}" \
+            --from-literal=auth-keys="${{ secrets.AUTH_KEYS }}"
+      
+      - name: Apply Kubernetes manifests
+        run: |
+          # Apply deployment, service, and networking
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+          kubectl apply -f k8s/networking.yaml
+      
+      - name: Update deployment image
+        run: |
+          # Update the deployment with the new image
+          kubectl set image deployment/microfastify \
+            microfastify=${{ needs.build.outputs.image-tag }} \
+            --namespace=default
+          
+          # Wait for rollout to complete
+          kubectl rollout status deployment/microfastify \
+            --namespace=default \
+            --timeout=5m
+      
+      - name: Verify deployment
+        run: |
+          kubectl get pods -l app=microfastify --namespace=default
+          kubectl describe deployment microfastify --namespace=default

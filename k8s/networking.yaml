@@ -1,0 +1,56 @@
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: microfastify-cert
+  namespace: default
+spec:
+  domains:
+    - kerl.space
+    - www.kernl.space # Optional: add www subdomain
+---
+apiVersion: networking.gke.io/v1beta1
+kind: FrontendConfig
+metadata:
+  name: microfastify-frontend-config
+  namespace: default
+spec:
+  redirectToHttps:
+    enabled: true
+    responseCodeName: MOVED_PERMANENTLY_DEFAULT
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microfastify-lb
+  namespace: default
+  labels:
+    app: microfastify
+spec:
+  type: NodePort # Changed from ClusterIP for Ingress
+  selector:
+    app: microfastify
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: microfastify
+  namespace: default
+  annotations:
+    networking.gke.io/managed-certificates: microfastify-cert
+    networking.gke.io/v1beta1.FrontendConfig: microfastify-frontend-config
+    kubernetes.io/ingress.global-static-ip-name: microfastify-ip # Reserve this IP first
+    kubernetes.io/ingress.class: gce
+  labels:
+    app: microfastify
+spec:
+  defaultBackend:
+    service:
+      name: microfastify-lb
+      port:
+        number: 80
