@@ -4,6 +4,7 @@ import fastify, {
   FastifyRequest,
   FastifyServerOptions,
 } from "fastify";
+import helmet from "@fastify/helmet";
 import auth from "@fastify/auth";
 import bearerAuthPlugin from "@fastify/bearer-auth";
 import {
@@ -41,8 +42,10 @@ export async function build(
   //   verifyErrorLogLevel: "debug",
   // });
 
+  app.register(helmet);
   app.register(rateLimit, { max: RATE_LIMIT_RPM, timeWindow: "1 minute" });
 
+  // Schema validation
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
