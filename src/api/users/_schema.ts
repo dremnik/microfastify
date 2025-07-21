@@ -4,18 +4,17 @@ export const userSchemas = {
   create: z.object({
     name: z.string().min(1, "Name is required"),
     email: z.string().email("Invalid email format"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    role: z.enum(["user", "admin"]).default("user"),
+    age: z.number().min(1, "Age must be positive"),
   }),
 
   update: z.object({
     name: z.string().min(1, "Name is required").optional(),
     email: z.string().email("Invalid email format").optional(),
-    role: z.enum(["user", "admin"]).optional(),
+    age: z.number().min(1, "Age must be positive").optional(),
   }),
 
   params: z.object({
-    id: z.string().uuid("Invalid user ID format"),
+    id: z.coerce.number().int().positive("Invalid user ID"),
   }),
 
   query: z.object({
@@ -33,12 +32,12 @@ export type UserQuery = z.infer<typeof userSchemas.query>;
 
 /* Response types */
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
-  role: "user" | "admin";
-  createdAt: string;
-  updatedAt: string;
+  age: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface UsersListResponse {

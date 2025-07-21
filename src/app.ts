@@ -17,8 +17,9 @@ import { logger } from "./logger";
 import { AUTH_KEYS, RATE_LIMIT_RPM } from "@/lib/constants";
 import { APIError, InternalServerError, ValidationError } from "./error";
 
-import users from "./routes/users";
+import users from "./api/users";
 import rateLimit from "@fastify/rate-limit";
+import database from "./db";
 
 /**
  * Main app builder.
@@ -33,6 +34,9 @@ export async function build(
     ...opts,
   });
 
+  // Database
+  await app.register(database);
+
   // Auth
   app.register(auth);
   // Bearer auth - API key
@@ -43,7 +47,7 @@ export async function build(
   // });
 
   app.register(helmet);
-  app.register(rateLimit, { max: RATE_LIMIT_RPM, timeWindow: "1 minute" });
+  // app.register(rateLimit, { max: RATE_LIMIT_RPM, timeWindow: "1 minute" });
 
   // Schema validation
   app.setValidatorCompiler(validatorCompiler);

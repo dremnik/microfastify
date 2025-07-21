@@ -1,6 +1,12 @@
 import { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
+import { count } from "drizzle-orm";
 
-import { Router } from "@/routes/router";
+/* db */
+import { db } from "@/db";
+import { usersTable } from "@/db/schema";
+import { usersCollection } from "@/db/collections";
+
+import { Router } from "@/api/router";
 import { NotFoundError } from "@/error";
 import {
   userSchemas,
@@ -32,11 +38,16 @@ async function listUsers(
   reply: FastifyReply,
   query: UserQuery,
 ): Promise<UsersListResponse> {
-  const { limit, offset, search } = query;
+  const { limit, offset } = query;
+
+  const users = await usersCollection.find({}, { limit, offset });
+
+  // For total count, we still need a direct query
+  const [{ total }] = await db.select({ total: count() }).from(usersTable);
 
   const response: UsersListResponse = {
-    users: [],
-    total: 0,
+    users,
+    total: Number(total),
     limit,
     offset,
   };
@@ -56,19 +67,11 @@ export async function getUser(
 ): Promise<User | null> {
   const { id } = params;
 
-  // Example: throw error if user not found
-  if (id === "not-found") {
-    throw new NotFoundError("User not found");
-  }
+  const user = await usersCollection.findOne({ id }, { limit: 1 });
 
-  const user: User = {
-    id,
-    name: "John Doe",
-    email: "john@example.com",
-    role: "user",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
+  if (!user) {
+    throw new NotFoundError();
+  }
 
   return user;
 }
@@ -83,16 +86,10 @@ export async function createUser(
   reply: FastifyReply,
   body: UserCreateBody,
 ) {
-  const { name, email, role } = body;
+  const { name, email, age } = body;
 
-  const user: User = {
-    id: crypto.randomUUID(),
-    name,
-    email,
-    role,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
+  const user = await usersCollection.insert({ name, email, age });
 
+  reply.status(201);
   return user;
 }
