@@ -4,6 +4,7 @@ import fastify, {
   FastifyRequest,
   FastifyServerOptions,
 } from "fastify";
+import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import auth from "@fastify/auth";
 import rateLimit from "@fastify/rate-limit";
@@ -15,10 +16,10 @@ import {
 import { ZodError } from "zod";
 
 import users from "@/api/users";
-import { logger } from "./logger";
-import { AUTH_KEYS, RATE_LIMIT_RPM } from "@/lib/constants";
-import { APIError, InternalServerError, ValidationError } from "./error";
 import database from "@/db";
+import { logger } from "@/logger";
+import { APIError, InternalServerError, UnauthorizedError, ValidationError } from "@/error";
+import { AUTH_KEYS, RATE_LIMIT_RPM } from "@/lib/constants";
 
 /**
  * Main app builder.
@@ -29,7 +30,7 @@ export async function build(
   opts: FastifyServerOptions = {},
 ): Promise<FastifyInstance> {
   const app = fastify({
-    logger,
+    loggerInstance: logger,
     ...opts,
   });
 
@@ -47,6 +48,20 @@ export async function build(
 
   app.register(helmet);
   app.register(rateLimit, { max: RATE_LIMIT_RPM, timeWindow: "1 minute" });
+
+  /* CORS */
+  const allowedOrigins = [
+    process.env.DASHBOARD_BASE_URL!,
+  ];
+  if (process.env.NODE_ENV === "development") {
+    allowedOrigins.push("http://localhost:3000"); // Only allow localhost in development
+  }
+
+  await app.register(cors, {
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  });
 
   // Schema validation
   app.setValidatorCompiler(validatorCompiler);
