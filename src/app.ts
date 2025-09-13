@@ -9,6 +9,7 @@ import helmet from "@fastify/helmet";
 import auth from "@fastify/auth";
 import rateLimit from "@fastify/rate-limit";
 import bearerAuthPlugin from "@fastify/bearer-auth";
+import { clerkPlugin, getAuth } from "@clerk/fastify";
 import {
   serializerCompiler,
   validatorCompiler,
@@ -18,7 +19,12 @@ import { ZodError } from "zod";
 import users from "@/api/users";
 import database from "@/db";
 import { logger } from "@/logger";
-import { APIError, InternalServerError, UnauthorizedError, ValidationError } from "@/error";
+import {
+  APIError,
+  InternalServerError,
+  UnauthorizedError,
+  ValidationError,
+} from "@/error";
 import { AUTH_KEYS, RATE_LIMIT_RPM } from "@/lib/constants";
 
 /**
@@ -50,9 +56,7 @@ export async function build(
   app.register(rateLimit, { max: RATE_LIMIT_RPM, timeWindow: "1 minute" });
 
   /* CORS */
-  const allowedOrigins = [
-    process.env.DASHBOARD_BASE_URL!,
-  ];
+  const allowedOrigins = [process.env.DASHBOARD_BASE_URL!];
   if (process.env.NODE_ENV === "development") {
     allowedOrigins.push("http://localhost:3000"); // Only allow localhost in development
   }
@@ -70,6 +74,24 @@ export async function build(
   // Register hooks
   app.addHook("onRequest", async (request, reply) => {
     request.log.info({ url: request.url }, "incoming request");
+  });
+
+  /* Auth */
+  await app.register(clerkPlugin, {
+    secretKey: process.env.CLERK_SECRET_KEY!,
+    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+    hookName: "onRequest",
+  });
+
+  app.addHook("preValidation", async (request, reply) => {
+    if (request.url === "/health") {
+      return; // Skip auth for health check
+    }
+
+    const auth = getAuth(request);
+    if (!auth.userId || !auth.orgId) {
+      throw new UnauthorizedError();
+    }
   });
 
   // Global error handler

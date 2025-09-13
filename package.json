@@ -11,6 +11,7 @@
     "test:run": "vitest run"
   },
   "dependencies": {
+    "@clerk/fastify": "^2.4.31",
     "@fastify/auth": "^5.0.2",
     "@fastify/bearer-auth": "^10.1.1",
     "@fastify/cors": "^11.1.0",
