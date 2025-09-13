@@ -28,10 +28,10 @@ importers:
         version: 17.2.0
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.3(@types/pg@8.15.4)(pg@8.16.3)
+        version: 0.44.3(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(pg@8.16.3)
       drizzle-zod:
         specifier: ^0.8.2
-        version: 0.8.2(drizzle-orm@0.44.3(@types/pg@8.15.4)(pg@8.16.3))(zod@4.0.5)
+        version: 0.8.2(drizzle-orm@0.44.3(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(pg@8.16.3))(zod@4.0.5)
       fastify:
         specifier: ^5.4.0
         version: 5.4.0
@@ -515,6 +515,10 @@ packages:
   '@napi-rs/nice@1.0.4':
     resolution: {integrity: sha512-Sqih1YARrmMoHlXGgI9JrrgkzxcaaEso0AH+Y7j8NHonUs+xe4iDsgC3IBIDNdzEewbNpccNN6hip+b5vmyRLw==}
     engines: {node: '>= 10'}
+
+  '@opentelemetry/api@1.9.0':
+    resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
+    engines: {node: '>=8.0.0'}
 
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
@@ -1781,6 +1785,9 @@ snapshots:
       '@napi-rs/nice-win32-x64-msvc': 1.0.4
     optional: true
 
+  '@opentelemetry/api@1.9.0':
+    optional: true
+
   '@sec-ant/readable-stream@0.4.1': {}
 
   '@sindresorhus/is@5.6.0': {}
@@ -2050,14 +2057,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.3(@types/pg@8.15.4)(pg@8.16.3):
+  drizzle-orm@0.44.3(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(pg@8.16.3):
     optionalDependencies:
+      '@opentelemetry/api': 1.9.0
       '@types/pg': 8.15.4
       pg: 8.16.3
 
-  drizzle-zod@0.8.2(drizzle-orm@0.44.3(@types/pg@8.15.4)(pg@8.16.3))(zod@4.0.5):
+  drizzle-zod@0.8.2(drizzle-orm@0.44.3(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(pg@8.16.3))(zod@4.0.5):
     dependencies:
-      drizzle-orm: 0.44.3(@types/pg@8.15.4)(pg@8.16.3)
+      drizzle-orm: 0.44.3(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(pg@8.16.3)
       zod: 4.0.5
 
   end-of-stream@1.4.5:

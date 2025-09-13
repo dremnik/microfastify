@@ -11,7 +11,6 @@ let db: ReturnType<typeof drizzle>;
  * Database plugin that integrates Drizzle ORM with @fastify/postgres
  */
 async function database(fastify: FastifyInstance) {
-  // Register @fastify/postgres first
   await fastify.register(postgres, {
     connectionString: process.env.DATABASE_URL!,
   });

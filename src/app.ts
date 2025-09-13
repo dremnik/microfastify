@@ -6,6 +6,7 @@ import fastify, {
 } from "fastify";
 import helmet from "@fastify/helmet";
 import auth from "@fastify/auth";
+import rateLimit from "@fastify/rate-limit";
 import bearerAuthPlugin from "@fastify/bearer-auth";
 import {
   serializerCompiler,
@@ -13,13 +14,11 @@ import {
 } from "fastify-type-provider-zod";
 import { ZodError } from "zod";
 
+import users from "@/api/users";
 import { logger } from "./logger";
 import { AUTH_KEYS, RATE_LIMIT_RPM } from "@/lib/constants";
 import { APIError, InternalServerError, ValidationError } from "./error";
-
-import users from "./api/users";
-import rateLimit from "@fastify/rate-limit";
-import database from "./db";
+import database from "@/db";
 
 /**
  * Main app builder.

@@ -1,78 +1,88 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { z } from 'zod';
+import {
+  FastifyInstance,
+  FastifyRequest,
+  FastifyReply,
+  RouteGenericInterface,
+} from "fastify";
+import type { ZodTypeProvider } from "fastify-type-provider-zod";
+import { z } from "zod";
 
-type Handler<TSchema extends z.ZodType> = (
-  request: FastifyRequest,
+type SchemaObject = {
+  querystring?: z.ZodType;
+  params?: z.ZodType;
+  body?: z.ZodType;
+};
+
+export type Handler<T extends RouteGenericInterface = RouteGenericInterface> = (
+  request: FastifyRequest<T>,
   reply: FastifyReply,
-  data: z.infer<TSchema>
 ) => Promise<any> | any;
 
 export class Router {
   constructor(private fastify: FastifyInstance) {}
 
-  get<TSchema extends z.ZodType>(
+  get<T extends RouteGenericInterface>(
     path: string,
-    schema: TSchema,
-    handler: Handler<TSchema>
+    schema: SchemaObject,
+    handler: Handler<T>,
   ) {
     this.fastify.withTypeProvider<ZodTypeProvider>().route({
-      method: 'GET',
+      method: "GET",
       url: path,
-      schema: { querystring: schema },
-      handler: async (req, reply) => handler(req, reply, req.query as z.infer<TSchema>),
+      schema,
+      handler,
     });
   }
 
-  post<TSchema extends z.ZodType>(
+  post<T extends RouteGenericInterface>(
     path: string,
-    schema: TSchema,
-    handler: Handler<TSchema>
+    schema: SchemaObject,
+    handler: Handler<T>,
   ) {
     this.fastify.withTypeProvider<ZodTypeProvider>().route({
-      method: 'POST',
+      method: "POST",
       url: path,
-      schema: { body: schema },
-      handler: async (req, reply) => handler(req, reply, req.body as z.infer<TSchema>),
+      schema,
+      handler,
     });
   }
 
-  put<TSchema extends z.ZodType>(
+  put<T extends RouteGenericInterface>(
     path: string,
-    schema: TSchema,
-    handler: Handler<TSchema>
+    schema: SchemaObject,
+    handler: Handler<T>,
   ) {
     this.fastify.withTypeProvider<ZodTypeProvider>().route({
-      method: 'PUT',
+      method: "PUT",
       url: path,
-      schema: { body: schema },
-      handler: async (req, reply) => handler(req, reply, req.body as z.infer<TSchema>),
+      schema,
+      handler,
     });
   }
 
-  patch<TSchema extends z.ZodType>(
+  patch<T extends RouteGenericInterface>(
     path: string,
-    schema: TSchema,
-    handler: Handler<TSchema>
+    schema: SchemaObject,
+    handler: Handler<T>,
   ) {
     this.fastify.withTypeProvider<ZodTypeProvider>().route({
-      method: 'PATCH',
+      method: "PATCH",
       url: path,
-      schema: { body: schema },
-      handler: async (req, reply) => handler(req, reply, req.body as z.infer<TSchema>),
+      schema,
+      handler,
     });
   }
 
-  delete<TSchema extends z.ZodType>(
+  delete<T extends RouteGenericInterface>(
     path: string,
-    schema: TSchema,
-    handler: Handler<TSchema>
+    schema: SchemaObject,
+    handler: Handler<T>,
   ) {
     this.fastify.withTypeProvider<ZodTypeProvider>().route({
-      method: 'DELETE',
+      method: "DELETE",
       url: path,
-      schema: { querystring: schema },
-      handler: async (req, reply) => handler(req, reply, req.query as z.infer<TSchema>),
+      schema,
+      handler,
     });
   }
 }

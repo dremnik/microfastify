@@ -8,6 +8,7 @@ import { usersCollection } from "@/db/collections";
 
 import { Router } from "@/api/router";
 import { NotFoundError } from "@/error";
+
 import {
   userSchemas,
   UserQuery,
@@ -17,28 +18,28 @@ import {
   UserCreateBody,
 } from "./_schema";
 
-/* Users */
-const users: FastifyPluginAsync = async (fastify) => {
+/**
+ * ROUTES :: /users
+ */
+const ROUTES: FastifyPluginAsync = async (fastify) => {
   const router = new Router(fastify);
-  // - /api/users -
-  router.get("/", userSchemas.query, listUsers);
-  router.get("/:id", userSchemas.params, getUser);
-  router.post("/", userSchemas.create, createUser);
+  router.get("/", { querystring: userSchemas.query }, listUsers);
+  router.get("/:id", { params: userSchemas.params }, getUser);
+  router.post("/", { body: userSchemas.create }, createUser);
 };
 
-export default users;
+export default ROUTES;
 
 /**
- * @handler: GET /api/users
+ * @handler: GET /v1/users
  *
  * Returns a list of users based on query parameters
  */
 async function listUsers(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Querystring: UserQuery }>,
   reply: FastifyReply,
-  query: UserQuery,
 ): Promise<UsersListResponse> {
-  const { limit, offset } = query;
+  const { limit, offset } = request.query;
 
   const users = await usersCollection.find({}, { limit, offset });
 
@@ -56,16 +57,15 @@ async function listUsers(
 }
 
 /**
- * @handler: GET /api/users/:id
+ * @handler: GET /v1/users/:id
  *
  * Returns the user with the specified id
  */
 export async function getUser(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Params: UserParams }>,
   reply: FastifyReply,
-  params: UserParams,
 ): Promise<User | null> {
-  const { id } = params;
+  const { id } = request.params;
 
   const user = await usersCollection.findOne({ id }, { limit: 1 });
 
@@ -77,16 +77,15 @@ export async function getUser(
 }
 
 /**
- * @handler: POST /api/users
+ * @handler: POST /v1/users
  *
  * Creates a new user
  */
 export async function createUser(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Body: UserCreateBody }>,
   reply: FastifyReply,
-  body: UserCreateBody,
 ) {
-  const { name, email, age } = body;
+  const { name, email, age } = request.body;
 
   const user = await usersCollection.insert({ name, email, age });
 
